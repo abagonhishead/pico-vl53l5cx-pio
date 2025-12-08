@@ -1,4 +1,4 @@
-# Pico VL53L5CX with PIO I2C
+# Pico VL53L5CX Driver with PIO I2C
 
 A modified fork of [akionu/pico-vl53l5cx](https://github.com/akionu/pico-vl53l5cx) that adds **PIO-based I2C support** to the Raspberry Pi Pico VL53L5CX time-of-flight sensor driver.
 
