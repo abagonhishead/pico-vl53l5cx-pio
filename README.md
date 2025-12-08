@@ -1,72 +1,66 @@
-# pico-vl53l5cx
+# Pico VL53L5CX with PIO I2C
 
-Raspberry Pi Pico（や他のRP2040ボード）でSTのToFセンサ「VL53L5CX」を使うためのライブラリとその使用例です。Raspberry Pi Pico C/C++ SDKで書かれています。が、コードはすべてCです。
+A modified fork of [akionu/pico-vl53l5cx](https://github.com/akionu/pico-vl53l5cx) that adds **PIO-based I2C support** to the Raspberry Pi Pico VL53L5CX time-of-flight sensor driver.
 
-このセンサは、RAMにファームウェアを保持するため、起動時にファームウェアを書き込まないと使えません。しかし、書き込むファームウェア自体は、バイナリファイルの形でしか提供されていません。また、レジスタの情報なども非公開です。
-なので、このライブラリはSTの [Ultra Lite Driver (ULD) for VL53L5CX multi-zone sensor](https://www.st.com/ja/embedded-software/stsw-img023.html) が内容のほとんどです。
+## Overview
 
-## 使用例で遊ぶ
+This project is a modified fork of akionu's [Pico VL53L5CX driver](https://github.com/akionu/pico-vl53l5cx). The key modification from the original project is the replacement of hardware I2C with **PIO (Programmable I/O) I2C**, allowing you to use **any two GPIO pin** as SDA/SCL instead of being limited to the Pico's fixed I2C pins (provided that they are consecutive GP pins, although you can bypass this by removing `assert(pin_scl == pin_sda + 1);` in i2c.pio).
 
-1. ```git clone https://github.com/Yudetamago-AM/pico-vl53l5cx.git```あるいはCode>Download Zipでダウンロードし解凍
-1. ```example```フォルダ内の各ファイルにI2Cのピン番号、割り込みピンのピン番号（detection_threshold）、I2Cのバスなどを記入する
-1. ビルドする（環境によりやり方が異なると思います）
-1. ```build/examples/```内に各使用例のフォルダ（と実行ファイル）が生成される
-1. 書き込む（ボードによりやり方が異なると思います）
-1. シリアルモニタを確認する。なお、例によっては接続する前に終わってしまうものもあると思うので、シリアルモニタ開いたまま一旦接続断して書き込む・ループの回数を変更するなどして対応してください。
 
-## 自分のコードで使う
+### Key Files
 
-1. 自分のプロジェクトにこのライブラリの```api```フォルダをコピペする
-1. プロジェクトの（一番上の階層の）CMakeLists.txtに```add_subdirectory("api")```と追記
-1. ビルドするソースコードの階層のCMakeLists.txtに```target_link_libraries(「targetの名前」 pico_stdlib hardware_i2c vl53l5cx)```と追記
-1. これでビルド・書き込み・実行がうまくいくと思います。
+- **`api/pio_i2c.c` and `api/pio_i2c.h`** - PIO I2C implementation
+- **`api/i2c.pio`** - PIO assembly code for I2C protocol
+- **`api/platform.c`** - Platform-specific I2C initialization using PIO
+- **`examples`** folder - Contains 11 example programs that test out different features of the VL53L5CX distance sensor. In each example progrma, you have to specify which GPIO pins are to be used as SCL/SDA pins in the macros section. I've only tested out `ex1_ranging_basic` and `ex2_get_set_params` so far, but hopefully they should all at least detect the VL53L5CX and successfully load the firmware.
 
-なお、上と違うディレクトリ構造にした時は、適宜パスを変更してください。
-
-## リファレンス
-
-### ULDの機能
-
-apiフォルダ内の各ヘッダーファイルに関数の説明があります。
-
-- （必須）基本的な測距は [vl53l5cx_api.h](./api/vl53l5cx_api.h)
-- （任意）キャリブレーション等は [vl53l5cx_plugin_xtalk.h](./api/vl53l5cx_plugin_xtalk.h)
-- （任意）しきい値を使った検出は [vl53l5cx_plugin_detection_thresholds.h](./api/vl53l5cx_plugin_detection_thresholds.h)
-　注意：センサーのINTピンをRP2040に接続する必要があります。
-- （任意）動作の検出は [vl53l5cx_plugin_motion_indicator.h](./api/vl53l5cx_plugin_motion_indicator.h)
-
-### このライブラリとしての機能
-
-[使用例](./examples/)を見てもらった方がわかりやすいかもしれません。
-
-```C
-i2c_inst_t vl53l5cx_i2c = {i2c0_hw, false};
-あるいは
-i2c_inst_t vl53l5cx_i2c = {i2c1_hw, false};
+### Building
+1. I developed this using a Pico 2W, so make sure to modify the following line in "/CMakeLists.txt" (the one in the root folder) if you're using a different Pico:
+```
+set(PICO_BOARD pico2_w)
 ```
 
-のようにしてI2Cバスを指定してあげる必要があります。
-また、VL53L5CX_Configurationという構造体型のメンバに```i2c```があるので、それに宣言したI2Cバスのアドレスを指定してあげる必要があります。
-
-```C
-VL53L5CX_Configuration 	Dev;
-
-Dev.platform.address = (uint8_t)((VL53L5CX_DEFAULT_I2C_ADDRESS >> 1) & 0xFF);
-Dev.platform.i2c     = &vl53l5cx_i2c; // set i2c bus
+2. Set the following environment variable to your Pico SDK path:
+```
+export PICO_SDK_PATH=/path/to/pico-sdk
 ```
 
-なお、RP2040では7bitのI2Cアドレスを用いるので、1バイト右シフトしています。VL53L5CXは標準で8bitアドレスが0x52（書き込み）・0x53（書き込み）なので、7bitだと0x29となります。
+3. Clone project
+```
+git clone https://github.com/tobias-sung/pico-vl53l5cx-pio.git
+cd pico-vl53l5cx-pio
+```
 
-## リンク
+4. Build
+```
+mkdir build
+cd build
 
-- データシート（DS13754 Rev 8）<https://www.st.com/resource/en/datasheet/vl53l5cx.pdf>
-- ユーザーマニュアル（UM2284）<https://www.st.com/resource/en/user_manual/um2884-a-guide-to-using-the-vl53l5cx-multizone-timeofflight-ranging-sensor-with-wide-field-of-view-ultra-lite-driver-uld-stmicroelectronics.pdf>
+cmake ..
+make
+```
+This builds all libraries and examples. If you just want to build one of the examples, then after `cmake ..` enter:
+```
+make <example_executable_name>
+```
+e.g.
+```
+make ex1_ranging_basic
+```
 
-## 実装上の注意
+### Loading onto Pico
+1. Disconnect the Pico from USB
+2. Hold the BOOTSEL button
+3. Connect the Pico via USB while holding BOOTSEL. The Pico will appear as a mass storage device (RPI-RP2)
+*Using `ex1_ranging_basic.c` as an example*
+4. Copy `ex1_ranging_basic.uf2` from `build/ex1_ranging_basic/` onto the RPI-RP2 storage device, or:
 
-ハマったところをメモ代わりに書いておきます。（ちょっと理解が足りてない感じもあります）
-platform.cのWrMulti関数をそのまま実装したり、ある一定のチャンクに区切って実装したりしても、vl53l5cx_api.cのvl53l5cx_init関数中で_vl53l5cx_poll_for_answer関数を呼ぶ部分でエラーとなります。これは、ファームウェアを正常に書き込めていないためです。というのも、Raspbery Pi Pico SDKのI2Cの実装では、「メッセージ」ごとにStop Conditionの代わりにRepeated Start Conditionを送りますが、これにVL53L5CXが対応していないためです。複数バイトを書き込む際には、[VL53L5CXのデータシート](https://www.st.com/resource/en/datasheet/vl53l5cx.pdf) のp.12、Figure.14にあるように、 メッセージごとのStop ConditionもRepeated Start Conditionも送らず、一気にアドレス・レジスタ・データの順で送る必要があります（もちろん「転送」の最後にはStop Conditionが必要です）。なお、ST Communityでも [VL53L5CX driver vl53l5cx_init() fails](https://community.st.com/s/question/0D53W000010uFcTSAU/vl53l5cx-driver-vl53l5cxinit-fails) として同様の問題が議論されています。
+```
+cp build/examples/ex1_ranging_basic/ex1_ranging_basic.uf2 /media/YOUR_USERNAME/RPI-RP2/
+```
 
-## ライセンス
+5. You can then use a serial program to check the output (every example has set `pico_enable_stdio_usb` to true, so all `printf` statements should be outputted via the Pico's USB connection). I use minicom:
+```
+minicom -D /dev/ttyACM0 -b 115200
+```
 
-BSD3条項ライセンス。詳しくはLISENCEを見てください。なお、使用したSTのULDならびに改変して使用したRaspberry Pi Pico SDKのコードの一部もBSD3条項ライセンスの下で配布されています。これらについては、コード中に明記してあります。
