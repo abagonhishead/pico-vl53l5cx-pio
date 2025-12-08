@@ -12,10 +12,10 @@ This project is a modified fork of akionu's [Pico VL53L5CX driver](https://githu
 - **`api/pio_i2c.c` and `api/pio_i2c.h`** - PIO I2C implementation
 - **`api/i2c.pio`** - PIO assembly code for I2C protocol
 - **`api/platform.c`** - Platform-specific I2C initialization using PIO
-- **`examples`** folder - Contains 11 example programs that test out different features of the VL53L5CX distance sensor. In each example progrma, you have to specify which GPIO pins are to be used as SCL/SDA pins in the macros section. I've only tested out `ex1_ranging_basic` and `ex2_get_set_params` so far, but hopefully they should all at least detect the VL53L5CX and successfully load the firmware.
+- **`examples`** folder - Contains 11 example programs that test out different features of the VL53L5CX distance sensor. In each example program, you have to specify which GPIO pins are to be used as SCL/SDA pins in the macros section. I've only tested out `ex1_ranging_basic` and `ex2_get_set_params` so far, but hopefully they should all at least detect the VL53L5CX and successfully load the firmware.
 
 ### Building
-1. I developed this using a Pico 2W, so make sure to modify the following line in "/CMakeLists.txt" (the one in the root folder) if you're using a different Pico:
+1. I developed this using a Pico 2W, so make sure to modify the following line in "/CMakeLists.txt" (the one in the top level project folder) if you're using a different Pico:
 ```
 set(PICO_BOARD pico2_w)
 ```
@@ -52,6 +52,7 @@ make ex1_ranging_basic
 1. Disconnect the Pico from USB
 2. Hold the BOOTSEL button
 3. Connect the Pico via USB while holding BOOTSEL. The Pico will appear as a mass storage device (RPI-RP2)
+
 *Using `ex1_ranging_basic.c` as an example*
 4. Copy `ex1_ranging_basic.uf2` from `build/ex1_ranging_basic/` onto the RPI-RP2 storage device, or:
 
@@ -63,4 +64,17 @@ cp build/examples/ex1_ranging_basic/ex1_ranging_basic.uf2 /media/YOUR_USERNAME/R
 ```
 minicom -D /dev/ttyACM0 -b 115200
 ```
+
+### Using in other projects
+Just copy the `/api/` folder into your project, then in the top-level `CMakeLists.txt` add `add_subdirectory(“api”)`.
+
+Then add: 
+```
+target_link_libraries(target_name
+    pico_stdlib
+    hardware_pio
+    vl53l5cx
+)
+```    
+to the `CMakeLists.txt` file in the source code directory you're building.
 
