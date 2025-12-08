@@ -1,8 +1,13 @@
 #Set the mimum required version of CMake
 cmake_minimum_required(VERSION 3.12)
 
+set(PICO_BOARD pico2_w)
+
 #Pull in SDK (must be before project)
-include(pico_sdk_import.cmake)
+#include(pico_sdk_import.cmake)
+
+# Pull in SDK (must be before project)
+include($ENV{PICO_SDK_PATH}/external/pico_sdk_import.cmake)
 
 #Set the project name, the programming language
 project(pico-vl53l5cx C CXX ASM)

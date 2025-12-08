@@ -1,6 +1,6 @@
 add_executable(ex10_motion_indicator ex10_motion_indicator.c)
 
-target_link_libraries(ex10_motion_indicator pico_stdlib hardware_i2c vl53l5cx)
+target_link_libraries(ex10_motion_indicator pico_stdlib hardware_pio vl53l5cx)
 
 pico_enable_stdio_usb(ex10_motion_indicator 1)
 pico_enable_stdio_uart(ex10_motion_indicator 0)

@@ -69,8 +69,7 @@
 #include <stdint.h>
 #include <string.h>
 #include "pico/stdlib.h"
-#include "hardware/i2c.h"
-
+#include "pio_i2c.h"
 /**
  * @brief Structure VL53L5CX_Platform needs to be filled by the customer,
  * depending on his platform. At least, it contains the VL53L5CX I2C address.
@@ -84,10 +83,7 @@ typedef struct
 	/* To be filled with customer's platform. At least an I2C address/descriptor
 	 * needs to be added */
     uint8_t  			address;
-	// make something like this to your main code:
-	// i2c_inst_t vl53l5cx_i2c = {i2c0_hw, false};
-	// and set this as shown in examples
-	i2c_inst_t 			*i2c;
+
 } VL53L5CX_Platform;
 
 /*
@@ -123,6 +119,16 @@ typedef struct
 // #define VL53L5CX_DISABLE_REFLECTANCE_PERCENT
 // #define VL53L5CX_DISABLE_TARGET_STATUS
 // #define VL53L5CX_DISABLE_MOTION_INDICATOR
+
+extern PIO i2c_pio;
+extern uint i2c_sm;
+extern uint i2c_offset;
+
+/** 
+* @param (int) sda : Pin number of GPIO pin to be used for SDA
+* @param (int) scl : Pin number of GPIO pin to be used for SCL
+*/
+void i2c_pio_init(int sda, int scl);
 
 /**
  * @param (VL53L5CX_Platform*) p_platform : Pointer of VL53L5CX platform

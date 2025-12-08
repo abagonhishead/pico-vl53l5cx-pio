@@ -1,6 +1,6 @@
 add_executable(ex3_ranging_modes ex3_ranging_modes.c)
 
-target_link_libraries(ex3_ranging_modes pico_stdlib hardware_i2c vl53l5cx)
+target_link_libraries(ex3_ranging_modes pico_stdlib hardware_pio vl53l5cx)
 
 pico_enable_stdio_usb(ex3_ranging_modes 1)
 pico_enable_stdio_uart(ex3_ranging_modes 0)

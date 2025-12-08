@@ -15,16 +15,15 @@
 #include <string.h>
 #include <stdio.h>
 #include "pico/stdlib.h"
-#include "hardware/i2c.h"
 #include "../../api/vl53l5cx_api.h"
+#include "../../api/platform.h"
 #include "../../api/vl53l5cx_plugin_motion_indicator.h"
 #include "../../api/vl53l5cx_plugin_detection_thresholds.h"
 
 // change below to your settings
-#define I2C_SDA 8
-#define I2C_SCL 9
+#define I2C_SDA 2
+#define I2C_SCL 3
 #define INT_PIN 11
-i2c_inst_t vl53l5cx_i2c = {i2c0_hw, false};
 
 volatile int IntCount = 0;
 
@@ -39,9 +38,7 @@ int main(void) {
     stdio_init_all();
     sleep_ms(3000);
 
-    i2c_init(&vl53l5cx_i2c, 400 * 1000); // 400kHz
-    gpio_set_function(I2C_SDA, GPIO_FUNC_I2C);
-    gpio_set_function(I2C_SCL, GPIO_FUNC_I2C);
+    i2c_pio_init(I2C_SDA, I2C_SCL);
 
 	gpio_init(INT_PIN);
 	gpio_set_dir(INT_PIN, GPIO_IN);
@@ -64,7 +61,6 @@ int main(void) {
 	/*********************************/
 
 	Dev.platform.address = (uint8_t)((VL53L5CX_DEFAULT_I2C_ADDRESS >> 1) & 0xFF);
-    Dev.platform.i2c     = &vl53l5cx_i2c; // set i2c bus
 
 	/*********************************/
 	/*   Power on sensor and init    */
@@ -76,6 +72,8 @@ int main(void) {
 	{
 		printf("VL53L5CX not detected at requested address\n");
 		return status;
+	} else {
+		printf("VL53L5CX detected.\r\n");
 	}
 
 	/* (Mandatory) Init VL53L5CX sensor */

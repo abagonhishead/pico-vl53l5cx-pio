@@ -1,6 +1,6 @@
 add_executable(ex8_visualize_xtalk_data ex8_visualize_xtalk_data.c)
 
-target_link_libraries(ex8_visualize_xtalk_data pico_stdlib hardware_i2c vl53l5cx)
+target_link_libraries(ex8_visualize_xtalk_data pico_stdlib hardware_pio vl53l5cx)
 
 pico_enable_stdio_usb(ex8_visualize_xtalk_data 1)
 pico_enable_stdio_uart(ex8_visualize_xtalk_data 0)
