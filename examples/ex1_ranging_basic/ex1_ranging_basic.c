@@ -22,7 +22,6 @@
 #include "pico/stdlib.h"
 #include "../../api/vl53l5cx_api.h"
 #include "../../api/platform.h"
-#include "debug_uart.h"
 
 // change below to your settings
 #define I2C_SDA 2
@@ -32,7 +31,6 @@
 int main(void) {
     // pico settings
     stdio_init_all();
-	debug_uart_init(3);
 
 	printf("STDIO initialized!\r\n");
     sleep_ms(3000);
